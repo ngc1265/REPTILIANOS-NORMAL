@@ -1,0 +1,904 @@
+<html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asalto Normal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .title {
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #00f5ff, #00d4ff, #00b8ff, #009fff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: normalGlow 2s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.8);
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .title:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #009fff, #00b8ff, #00d4ff, #00f5ff);
+        }
+        
+        .title.editing {
+            background: none;
+            -webkit-text-fill-color: #ffd700;
+            outline: 3px solid #ffd700;
+            animation: none;
+        }
+        
+        @keyframes normalGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 80px;
+            margin-bottom: 30px;
+        }
+        
+        .save-button, .reset-button, .screenshot-button {
+            padding: 12px 25px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .save-button {
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            color: #000;
+        }
+        
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.4);
+        }
+        
+        .save-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .screenshot-button {
+            background: linear-gradient(45deg, #ff00ff, #8b008b);
+            color: #fff;
+        }
+        
+        .screenshot-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 255, 0.4);
+        }
+        
+        .screenshot-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .reset-button {
+            background: linear-gradient(45deg, #ff6b35, #ff8e53);
+            color: #fff;
+        }
+        
+        .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+        
+        .changes-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .changes-indicator.visible {
+            opacity: 1;
+        }
+        
+        .changes-indicator.unsaved {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.5);
+        }
+        
+        .changes-indicator.saved {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            border: 1px solid rgba(0, 255, 65, 0.5);
+        }
+        
+        .teams-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .team-component {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .team-component::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(45deg, var(--team-color), var(--team-secondary));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+        }
+        
+        .team1 {
+            --team-color: #00f5ff;
+            --team-secondary: #0077be;
+            box-shadow: 0 0 40px rgba(0, 245, 255, 0.4);
+        }
+        
+        .team2 {
+            --team-color: #ff00ff;
+            --team-secondary: #8b008b;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.4);
+        }
+        
+        .team3 {
+            --team-color: #00ff41;
+            --team-secondary: #00cc33;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.4);
+        }
+        
+        .team-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .team1 .team-title {
+            background: linear-gradient(45deg, #00f5ff, #0077be);
+            color: #000;
+            text-shadow: none;
+        }
+        
+        .team2 .team-title {
+            background: linear-gradient(45deg, #ff00ff, #8b008b);
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+        }
+        
+        .team3 .team-title {
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            color: #000;
+            text-shadow: none;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .line-number {
+            font-weight: 700;
+            color: var(--team-color);
+            text-align: center;
+            width: 60px;
+            font-size: 1.2rem;
+        }
+        
+        .player {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            white-space: pre-wrap;
+            font-weight: 700;
+        }
+        
+        .player:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .player.modified {
+            /* Sin estilos visuales de modificación */
+        }
+        
+        .empty-slot {
+            color: rgba(255, 255, 255, 0.3);
+            font-style: italic;
+        }
+        
+        .edit-hint {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(0, 245, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            font-family: 'Orbitron', monospace;
+            color: #00f5ff;
+        }
+        
+        .footer-info {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 1200px) {
+            .teams-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title" contenteditable="false" data-original="ASIGNACION ASALTO NORMAL V DIF V" data-modified="true">ASIGNACION ASALTO NORMAL V DIF V</h1>
+        
+        <div class="changes-indicator visible unsaved">⚠️ Tienes cambios sin guardar</div>
+        
+        <div class="edit-hint">
+            💡 Haz clic en cualquier nombre para editarlo | Haz clic en el título para cambiarlo
+        </div>
+        
+        <div class="teams-container">
+            <!-- EQUIPO 1 -->
+            <div class="team-component team1">
+                <div class="team-title">EQUIPO 1</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Línea</th>
+                                <th>Jugadores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="line-number">1</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 1">KIDKEIHOR
+El_LOCO_ODBALL</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">2</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 2">CARMINA</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">3</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 3">ODISEO</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">4</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 4">MR. RUSSO</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">5</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 5">SMETWYCK</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">6</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 6">TANIA</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">7</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">RIQUELME</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">8</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">MERCENARIO_ELITE
+JAGUAR</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EQUIPO 2 -->
+            <div class="team-component team2">
+                <div class="team-title">EQUIPO 2</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Línea</th>
+                                <th>Jugadores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="line-number">1</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 1">SANTOS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">2</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 2">TEMPUS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">3</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 3">JOSEBERNEDO</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">4</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 4">GRIZZERO</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">5</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 5">MRAVLAC</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">6</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 6">DREGONJUAN</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">7</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">SALOCIN</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">8</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">BELLCRANER
+CRIS1387</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EQUIPO 3 -->
+            <div class="team-component team3">
+                <div class="team-title">EQUIPO 3</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Línea</th>
+                                <th>Jugadores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="line-number">1</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 1">GRISS</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">2</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 2">CAIN</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">3</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 3">OKSANA</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">4</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 4">VIT
+SLAYERNATSU</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">5</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 5">ELICEO</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">6</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="Jugador 6">EDSON.LOPEZ
+GATUCHI</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">7</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">LUIXORB</span></td>
+                            </tr>
+                            <tr>
+                                <td class="line-number">8</td>
+                                <td class="players-cell"><span class="player editable modified" data-original="">ILEOSVI</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="save-button">💾 Guardar Cambios</button>
+            <button class="screenshot-button">📸 Capturar Imagen</button>
+            <button class="reset-button">🔄 Restablecer Todo</button>
+        </div>
+        
+        <div class="footer-info">
+            Haz clic en los nombres para editarlos • Los cambios se guardan al hacer clic fuera del campo de edición
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editablePlayers = document.querySelectorAll('.player.editable');
+            const saveButton = document.querySelector('.save-button');
+            const resetButton = document.querySelector('.reset-button');
+            const screenshotButton = document.querySelector('.screenshot-button');
+            const changesIndicator = document.querySelector('.changes-indicator');
+            const mainTitle = document.querySelector('.title');
+            
+            let hasUnsavedChanges = false;
+            
+            // Guardar valores originales
+            mainTitle.setAttribute('data-original', mainTitle.textContent);
+            
+            // Hacer el título editable al hacer clic
+            mainTitle.addEventListener('click', function() {
+                startEditTitle(this);
+            });
+            
+            // Evento para cada nombre editable
+            editablePlayers.forEach(player => {
+                player.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (!this.querySelector('textarea')) {
+                        startEdit(this);
+                    }
+                });
+            });
+            
+            // Botón guardar
+            saveButton.addEventListener('click', downloadModifiedFile);
+            
+            // Botón reset
+            resetButton.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres restablecer todos los nombres a sus valores originales?')) {
+                    resetAllNames();
+                }
+            });
+            
+            // Botón captura
+            screenshotButton.addEventListener('click', captureScreenshot);
+            
+            function startEdit(playerElement) {
+                const originalText = playerElement.textContent;
+                const playersCell = playerElement.parentElement;
+                
+                // Guardar todos los elementos hermanos
+                const allPlayers = Array.from(playersCell.children);
+                
+                // Crear textarea
+                const textarea = document.createElement('textarea');
+                textarea.value = originalText === '-' ? '' : originalText;
+                textarea.style.cssText = `
+                    background: rgba(255, 255, 255, 0.95);
+                    color: #000;
+                    border: 2px solid #00f5ff;
+                    padding: 8px;
+                    border-radius: 6px;
+                    font-size: 1.35rem;
+                    font-weight: 700;
+                    font-family: 'Rajdhani', sans-serif;
+                    width: 100%;
+                    resize: vertical;
+                    min-height: 40px;
+                    outline: none;
+                    white-space: pre-wrap;
+                `;
+                
+                // Reemplazar todo el contenido de la celda con el textarea
+                playersCell.innerHTML = '';
+                playersCell.appendChild(textarea);
+                
+                textarea.focus();
+                textarea.select();
+                
+                function saveEdit() {
+                    const newText = textarea.value.trim();
+                    
+                    // Restaurar elementos originales
+                    playersCell.innerHTML = '';
+                    allPlayers.forEach(player => {
+                        playersCell.appendChild(player);
+                    });
+                    
+                    // Actualizar el texto del jugador original (preservando saltos de línea)
+                    if (newText === '') {
+                        playerElement.textContent = '-';
+                        playerElement.classList.add('empty-slot');
+                    } else {
+                        playerElement.textContent = newText;
+                        playerElement.classList.remove('empty-slot');
+                    }
+                    
+                    // Marcar como modificado si cambió
+                    if (newText !== playerElement.getAttribute('data-original')) {
+                        playerElement.classList.add('modified');
+                        markAsChanged();
+                    } else {
+                        playerElement.classList.remove('modified');
+                        checkForChanges();
+                    }
+                }
+                
+                function cancelEdit() {
+                    // Restaurar elementos originales
+                    playersCell.innerHTML = '';
+                    allPlayers.forEach(player => {
+                        playersCell.appendChild(player);
+                    });
+                }
+                
+                textarea.addEventListener('blur', saveEdit);
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        cancelEdit();
+                    }
+                });
+            }
+            
+            function startEditTitle(titleElement) {
+                if (titleElement.querySelector('input')) return;
+                
+                const originalText = titleElement.textContent;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = originalText;
+                input.style.cssText = `
+                    background: rgba(255, 255, 255, 0.95);
+                    color: #000;
+                    border: none;
+                    padding: 15px;
+                    border-radius: 10px;
+                    font-size: 3rem;
+                    font-weight: 900;
+                    font-family: 'Orbitron', monospace;
+                    width: 100%;
+                    text-align: center;
+                    outline: 3px solid #ffd700;
+                    letter-spacing: 3px;
+                `;
+                
+                titleElement.classList.add('editing');
+                titleElement.textContent = '';
+                titleElement.appendChild(input);
+                
+                input.focus();
+                input.select();
+                
+                function saveEdit() {
+                    const newText = input.value.trim() || originalText;
+                    titleElement.textContent = newText;
+                    titleElement.classList.remove('editing');
+                    
+                    if (newText !== titleElement.getAttribute('data-original')) {
+                        titleElement.setAttribute('data-modified', 'true');
+                        markAsChanged();
+                    } else {
+                        titleElement.removeAttribute('data-modified');
+                        checkForChanges();
+                    }
+                }
+                
+                function cancelEdit() {
+                    titleElement.textContent = originalText;
+                    titleElement.classList.remove('editing');
+                }
+                
+                input.addEventListener('blur', saveEdit);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        saveEdit();
+                    } else if (e.key === 'Escape') {
+                        cancelEdit();
+                    }
+                });
+            }
+            
+            function markAsChanged() {
+                hasUnsavedChanges = true;
+                saveButton.disabled = false;
+                changesIndicator.className = 'changes-indicator visible unsaved';
+                changesIndicator.textContent = '⚠️ Tienes cambios sin guardar';
+            }
+            
+            function markAsSaved() {
+                hasUnsavedChanges = false;
+                saveButton.disabled = true;
+                changesIndicator.className = 'changes-indicator visible saved';
+                changesIndicator.textContent = '✅ Cambios guardados correctamente';
+                
+                setTimeout(() => {
+                    changesIndicator.classList.remove('visible');
+                }, 3000);
+            }
+            
+            function checkForChanges() {
+                const modifiedPlayers = document.querySelectorAll('.player.modified');
+                const titleModified = mainTitle.hasAttribute('data-modified');
+                
+                if (modifiedPlayers.length === 0 && !titleModified) {
+                    hasUnsavedChanges = false;
+                    saveButton.disabled = true;
+                    changesIndicator.classList.remove('visible');
+                }
+            }
+            
+            function captureScreenshot() {
+                screenshotButton.disabled = true;
+                screenshotButton.textContent = '📸 Capturando...';
+                
+                if (typeof html2canvas === 'undefined') {
+                    screenshotButton.disabled = false;
+                    screenshotButton.textContent = '📸 Capturar Imagen';
+                    alert('ERROR: La librería no se cargó. Recargá la página e intentá de nuevo.');
+                    return;
+                }
+                
+                // Crear contenedor temporal ANCHO para la captura (3 equipos)
+                const captureContainer = document.createElement('div');
+                captureContainer.style.cssText = `
+                    position: fixed;
+                    top: -10000px;
+                    left: 0;
+                    width: 2200px;
+                    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+                    padding: 40px;
+                    font-family: 'Rajdhani', sans-serif;
+                    color: #fff;
+                `;
+                
+                // Clonar el título
+                const title = document.querySelector('.title').cloneNode(true);
+                title.style.fontSize = '3.5rem';
+                captureContainer.appendChild(title);
+                
+                // Crear contenedor para los 3 equipos
+                const teamsContainer = document.createElement('div');
+                teamsContainer.style.cssText = `
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 30px;
+                    margin-top: 40px;
+                `;
+                
+                // Clonar los 3 equipos
+                const teams = document.querySelectorAll('.team-component');
+                teams.forEach(team => {
+                    const clonedTeam = team.cloneNode(true);
+                    
+                    // AUMENTAR tamaño de letra de nombres de jugadores
+                    const players = clonedTeam.querySelectorAll('.player');
+                    players.forEach(player => {
+                        player.style.fontSize = '1.3rem';
+                        player.style.padding = '12px 16px';
+                        player.style.fontWeight = '600';
+                    });
+                    
+                    // Aumentar tamaño del título del equipo
+                    const teamTitle = clonedTeam.querySelector('.team-title');
+                    if (teamTitle) {
+                        teamTitle.style.fontSize = '2rem';
+                        teamTitle.style.padding = '16px';
+                    }
+                    
+                    // Aumentar tamaño de números de línea
+                    const lineNumbers = clonedTeam.querySelectorAll('.line-number');
+                    lineNumbers.forEach(num => {
+                        num.style.fontSize = '1.4rem';
+                        num.style.fontWeight = '700';
+                    });
+                    
+                    teamsContainer.appendChild(clonedTeam);
+                });
+                
+                captureContainer.appendChild(teamsContainer);
+                
+                // Agregar al body
+                document.body.appendChild(captureContainer);
+                
+                // Capturar después de un momento
+                setTimeout(() => {
+                    html2canvas(captureContainer, {
+                        scale: 2,
+                        backgroundColor: '#0a0a0a',
+                        logging: false,
+                        allowTaint: true,
+                        useCORS: true,
+                        width: 2200,
+                        height: captureContainer.scrollHeight
+                    }).then(canvas => {
+                        // Eliminar contenedor temporal
+                        document.body.removeChild(captureContainer);
+                        
+                        // Descargar
+                        canvas.toBlob(function(blob) {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            const date = new Date().toISOString().slice(0,10);
+                            link.download = 'asalto_normal_' + date + '.png';
+                            link.href = url;
+                            
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            setTimeout(() => URL.revokeObjectURL(url), 100);
+                            
+                            screenshotButton.disabled = false;
+                            screenshotButton.textContent = '📸 Capturar Imagen';
+                            
+                            changesIndicator.className = 'changes-indicator visible saved';
+                            changesIndicator.textContent = '✅ Imagen descargada!';
+                            
+                            setTimeout(() => {
+                                if (!hasUnsavedChanges) {
+                                    changesIndicator.classList.remove('visible');
+                                }
+                            }, 3000);
+                        }, 'image/png');
+                        
+                    }).catch(error => {
+                        // Eliminar contenedor en caso de error
+                        if (document.body.contains(captureContainer)) {
+                            document.body.removeChild(captureContainer);
+                        }
+                        
+                        console.error('Error:', error);
+                        
+                        screenshotButton.disabled = false;
+                        screenshotButton.textContent = '📸 Capturar Imagen';
+                        
+                        alert('Error al capturar: ' + error.message);
+                    });
+                }, 800);
+            }
+            
+            function downloadModifiedFile() {
+                const htmlContent = document.documentElement.outerHTML;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'asalto_normal_8_lineas_modificado.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                markAsSaved();
+            }
+            
+            function resetAllNames() {
+                editablePlayers.forEach(player => {
+                    const originalText = player.getAttribute('data-original');
+                    if (originalText === '') {
+                        player.textContent = '-';
+                        player.classList.add('empty-slot');
+                    } else {
+                        player.textContent = originalText;
+                        player.classList.remove('empty-slot');
+                    }
+                    player.classList.remove('modified');
+                });
+                
+                const originalTitle = mainTitle.getAttribute('data-original');
+                mainTitle.textContent = originalTitle;
+                mainTitle.removeAttribute('data-modified');
+                
+                hasUnsavedChanges = false;
+                saveButton.disabled = true;
+                changesIndicator.classList.remove('visible');
+            }
+            
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+        });
+    </script>
+
+</body></html>

@@ -739,7 +739,7 @@ GATUCHI</span></td>
                     position: fixed;
                     top: -10000px;
                     left: 0;
-                    width: 2200px;
+                    width: 1500px;
                     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
                     padding: 40px;
                     font-family: 'Rajdhani', sans-serif;
@@ -748,7 +748,8 @@ GATUCHI</span></td>
                 
                 // Clonar el título
                 const title = document.querySelector('.title').cloneNode(true);
-                title.style.fontSize = '3.5rem';
+                title.style.fontSize = '3.8rem';
+                title.style.marginBottom = '35px';
                 captureContainer.appendChild(title);
                 
                 // Crear contenedor para los 3 equipos
@@ -756,8 +757,8 @@ GATUCHI</span></td>
                 teamsContainer.style.cssText = `
                     display: grid;
                     grid-template-columns: 1fr 1fr 1fr;
-                    gap: 30px;
-                    margin-top: 40px;
+                    gap: 25px;
+                    margin-top: 35px;
                 `;
                 
                 // Clonar los 3 equipos
@@ -765,26 +766,41 @@ GATUCHI</span></td>
                 teams.forEach(team => {
                     const clonedTeam = team.cloneNode(true);
                     
-                    // AUMENTAR tamaño de letra de nombres de jugadores
+                    // AUMENTAR BASTANTE MÁS el tamaño de letra de nombres de jugadores
                     const players = clonedTeam.querySelectorAll('.player');
                     players.forEach(player => {
-                        player.style.fontSize = '1.3rem';
-                        player.style.padding = '12px 16px';
-                        player.style.fontWeight = '600';
+                        player.style.fontSize = '2.2rem';
+                        player.style.padding = '18px 22px';
+                        player.style.fontWeight = '700';
+                        player.style.lineHeight = '1.3';
                     });
                     
                     // Aumentar tamaño del título del equipo
                     const teamTitle = clonedTeam.querySelector('.team-title');
                     if (teamTitle) {
-                        teamTitle.style.fontSize = '2rem';
-                        teamTitle.style.padding = '16px';
+                        teamTitle.style.fontSize = '2.8rem';
+                        teamTitle.style.padding = '22px';
+                        teamTitle.style.fontWeight = '900';
                     }
                     
                     // Aumentar tamaño de números de línea
                     const lineNumbers = clonedTeam.querySelectorAll('.line-number');
                     lineNumbers.forEach(num => {
-                        num.style.fontSize = '1.4rem';
-                        num.style.fontWeight = '700';
+                        num.style.fontSize = '2rem';
+                        num.style.fontWeight = '900';
+                    });
+                    
+                    // Aumentar tamaño de headers de tabla
+                    const tableHeaders = clonedTeam.querySelectorAll('th');
+                    tableHeaders.forEach(th => {
+                        th.style.fontSize = '1.7rem';
+                        th.style.padding = '18px';
+                    });
+                    
+                    // Aumentar padding de celdas
+                    const tableCells = clonedTeam.querySelectorAll('td');
+                    tableCells.forEach(td => {
+                        td.style.padding = '18px 14px';
                     });
                     
                     teamsContainer.appendChild(clonedTeam);
@@ -803,7 +819,7 @@ GATUCHI</span></td>
                         logging: false,
                         allowTaint: true,
                         useCORS: true,
-                        width: 2200,
+                        width: 1500,
                         height: captureContainer.scrollHeight
                     }).then(canvas => {
                         // Eliminar contenedor temporal
